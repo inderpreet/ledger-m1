@@ -1,0 +1,12 @@
+---
+description: Frontend pages and API usage
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend
+
+- Fetch `/api/*` (Next rewrites to FastAPI). No client-side running balances.
+- Shared table: `CashflowView` for bank and cards. Expenses: `RecurringTable` + `OneOffTable`. Setup: balances + `CreditCardSetup`.
+- Account colors: `lib/accountStyle.ts` — Scotia `#c42b2b`, TD `#187a3c`.
+- Keep redirects for `/cashflow`, `/cc-cashflow`, `/recurring`, `/one-off`, `/settings`.

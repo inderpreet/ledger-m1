@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f3efe4;
+  --ink: #1c2218;
+  --moss: #3d5c45;
+  --moss-deep: #2a4030;
+  --clay: #a14a32;
+  --rule: #d8d0c0;
+  --card: #fbf8f1;
+  --scotia: #c42b2b;
+  --td: #187a3c;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-moss: var(--moss);
+  --color-moss-deep: var(--moss-deep);
+  --color-clay: var(--clay);
+  --color-rule: var(--rule);
+  --color-card: var(--card);
+  --color-scotia: var(--scotia);
+  --color-td: var(--td);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-newsreader);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

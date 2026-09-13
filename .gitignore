@@ -1,0 +1,33 @@
+# Python
+backend/.venv/
+**/__pycache__/
+**/*.py[cod]
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.mypy_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Local SQLite
+backend/app.db
+backend/app.db-journal
+*.db-journal
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+
+# Env / OS
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.idea/
+.vscode/

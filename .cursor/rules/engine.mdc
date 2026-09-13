@@ -1,0 +1,22 @@
+---
+description: Cash-flow engine rules that must not regress
+globs: backend/app/engine.py
+alwaysApply: false
+---
+
+# Engine
+
+Pure functions only. No FastAPI or SQLAlchemy imports. Pin behavior in `backend/tests/test_engine.py`.
+
+```python
+# Monthly: clamp day 31 to month-end — never roll into next month
+effective_day = min(item.day_of_month, calendar.monthrange(d.year, d.month)[1])
+
+# Bi-weekly: every 14 days from start_date (required)
+(d - start).days % 14 == 0
+```
+
+- Statement total: expense `+`, refund `-`. Positive = owed / bank debit on due date.
+- Bank loop per day: recurring, then one-off, then CC payments.
+- Card cashflow: ignore charges before that card's first `statement_from`. On `payment_due`, subtract that cycle's total only.
+- Incomplete recurring rows (`amount` or `day_of_month` null) do not fire.

@@ -1,0 +1,15 @@
+---
+description: Ledger project conventions — stack, pages, scripts
+alwaysApply: true
+---
+
+# Ledger
+
+Cash flow tracker. FastAPI + SQLite backend, Next.js frontend. Backend owns all balance math; frontend only renders API data.
+
+- Start: `.\start.ps1` (API :8000, app :3000). Stop this project: `.\stop.ps1`.
+- Nav: `/` Dashboard, `/bank-flow`, `/credit-cards`, `/expenses`, `/setup`.
+- Amounts stored positive. Direction from `item_type`.
+- Card charges do not hit a bank until `payment_due`. That payment also pays the card down by the statement total.
+- Do not cache computed balances in the database.
+- After UI changes, verify the flow in the browser.
