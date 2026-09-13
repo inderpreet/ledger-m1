@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
-import { Nav } from "@/components/Nav";
+import { AppShell } from "@/components/AppShell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,8 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="flex min-h-full">
-        <Nav />
-        <main className="min-h-screen flex-1 px-8 py-8">{children}</main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

@@ -1,12 +1,16 @@
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
     },
     cache: "no-store",
   });
+  if (res.status === 401 && typeof window !== "undefined" && window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
   if (!res.ok) {
     let detail = res.statusText;
     try {

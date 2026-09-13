@@ -13,3 +13,4 @@ Cash flow tracker. FastAPI + SQLite backend, Next.js frontend. Backend owns all 
 - Card charges do not hit a bank until `payment_due`. That payment also pays the card down by the statement total.
 - Do not cache computed balances in the database.
 - After UI changes, verify the flow in the browser.
+- Single-user auth: generated password, bcrypt hash in SQLite, httpOnly session cookie. `./set-password.sh` rotates it.

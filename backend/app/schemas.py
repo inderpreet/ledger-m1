@@ -233,3 +233,16 @@ class StatementCycleOut(BaseModel):
     statement_to: str
     payment_due: str
     is_generated: bool
+
+
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
+class AuthStatusOut(BaseModel):
+    configured: bool
+
+
+class AuthMeOut(BaseModel):
+    username: str

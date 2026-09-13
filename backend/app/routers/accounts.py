@@ -8,7 +8,9 @@ from app.models import Account, CreditCardConfig, OneOffItem, RecurringItem, Sta
 from app.schemas import AccountCreate, AccountOut, AccountUpdate
 from app.validation import get_account_or_404, validate_funding_account
 
-router = APIRouter()
+from app.security import current_user
+
+router = APIRouter(dependencies=[Depends(current_user)])
 
 
 def _to_out(account: Account) -> AccountOut:

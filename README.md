@@ -22,11 +22,35 @@ Stop only this project's API, Next.js, and launcher windows:
 
 Or start each side alone: `.\start-backend.ps1`, `.\start-frontend.ps1`.
 
+### Login (required)
+
+One local username. A script generates a long random password and stores **only a bcrypt hash** in SQLite. The plaintext is printed once.
+
+```bash
+./set-password.sh                  # Linux VPS
+./set-password.sh --username alex  # optional name (default: ledger)
+```
+
+```powershell
+.\set-password.ps1
+.\set-password.ps1 --username alex
+```
+
+Running it again rotates the password and signs everyone out.
+
+On a VPS put HTTPS in front (nginx/Caddy) and:
+
+```bash
+export LEDGER_SECURE_COOKIES=1
+```
+
+Sessions are httpOnly cookies (14 days). Login is rate-limited. `/api/health` stays public; every other `/api` route requires a session.
+
 Backend tests:
 
 ```powershell
 cd backend
-.\.venv\Scripts\python -m pytest tests\test_engine.py -q
+.\.venv\Scripts\python -m pytest tests -q
 ```
 
 ## Pages
@@ -38,6 +62,7 @@ cd backend
 | Credit Cards | `/credit-cards` | Card-targeted charges and due-date payments |
 | Expenses | `/expenses` | Recurring and one-off items |
 | Setup | `/setup` | Opening balances, model window, card funding, statement cycles |
+| — | `/login` | Single-user sign-in |
 
 Old routes redirect: `/cashflow` → `/bank-flow`, `/cc-cashflow` → `/credit-cards`, `/recurring` and `/one-off` → `/expenses`, `/settings` → `/setup`.
 
@@ -81,7 +106,8 @@ Computed (read-only):
 - `GET /daily-cashflow?start=&end=`
 - `GET /cc-cashflow?start=&end=`
 - `GET /dashboard`
-- `GET /health`
+- `GET /health` (public)
+- `GET /auth/status` (public), `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`
 
 Income rows must target a bank (422 otherwise). Card funding must be a bank. Amounts must be > 0 when set.
 

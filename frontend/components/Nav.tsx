@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "Dashboard" },
@@ -13,6 +13,13 @@ const LINKS = [
 
 export function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    router.replace("/login");
+  }
+
   return (
     <aside className="flex w-56 shrink-0 flex-col bg-ink text-[#f3efe4]">
       <div className="border-b border-white/10 px-5 py-6">
@@ -39,6 +46,15 @@ export function Nav() {
           );
         })}
       </nav>
+      <div className="border-t border-white/10 p-3">
+        <button
+          type="button"
+          className="w-full rounded-md px-3 py-2 text-left text-sm text-white/55 hover:bg-white/6 hover:text-white"
+          onClick={signOut}
+        >
+          Sign out
+        </button>
+      </div>
     </aside>
   );
 }

@@ -13,7 +13,9 @@ from app.schemas import (
 )
 from app.validation import validate_item_target
 
-router = APIRouter()
+from app.security import current_user
+
+router = APIRouter(dependencies=[Depends(current_user)])
 
 
 @router.get("/recurring-items", response_model=list[RecurringItemOut])

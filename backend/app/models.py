@@ -115,3 +115,20 @@ class Setting(Base):
 
     key: Mapped[str] = mapped_column(String, primary_key=True)
     value: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class AuthUser(Base):
+    __tablename__ = "auth_users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("auth_users.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    expires_at: Mapped[str] = mapped_column(String, nullable=False)

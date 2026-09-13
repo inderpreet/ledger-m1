@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import SessionLocal, ensure_schema
-from app.routers import accounts, cards, items, reports
+from app.routers import accounts, auth, cards, items, reports
 from app.seed import seed
 
 ensure_schema()
@@ -21,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api")
 app.include_router(accounts.router, prefix="/api")
 app.include_router(items.router, prefix="/api")
 app.include_router(cards.router, prefix="/api")

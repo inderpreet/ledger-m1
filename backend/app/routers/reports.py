@@ -14,7 +14,9 @@ from app.services import (
     upsert_setting,
 )
 
-router = APIRouter()
+from app.security import current_user
+
+router = APIRouter(dependencies=[Depends(current_user)])
 
 
 @router.get("/settings", response_model=SettingsOut)

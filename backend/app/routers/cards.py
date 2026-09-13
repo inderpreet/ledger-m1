@@ -14,7 +14,9 @@ from app.schemas import (
 from app.services import get_settings
 from app.validation import get_account_or_404, validate_funding_account
 
-router = APIRouter()
+from app.security import current_user
+
+router = APIRouter(dependencies=[Depends(current_user)])
 
 
 @router.get("/credit-cards", response_model=list[CreditCardOut])
