@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
+const apiProxy = process.env.API_PROXY || "http://127.0.0.1:8000";
+
 const nextConfig: NextConfig = {
+  output: "standalone",
   async redirects() {
     return [
       { source: "/cashflow", destination: "/bank-flow", permanent: false },
@@ -14,7 +17,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://127.0.0.1:8000/api/:path*",
+        destination: `${apiProxy}/api/:path*`,
       },
     ];
   },

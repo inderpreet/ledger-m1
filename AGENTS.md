@@ -8,6 +8,7 @@ Read `README.md` before changing cash-flow math. The backend owns every balance.
 - Stop this project only: `.\stop.ps1` (`-ListOnly` to preview)
 - Engine / auth tests: `backend\.venv\Scripts\python -m pytest tests -q` from `backend/`
 - Create or rotate the single login: `.\set-password.ps1` or `./set-password.sh` — never store the plaintext password in the repo
+- Docker: `docker compose up -d --build`, then `docker compose exec api python set_password.py`. Data volume `ledger-data`. Env: `LEDGER_DB_PATH`, `LEDGER_SECURE_COOKIES`, `LEDGER_PORT`.
 
 Uvicorn `--reload` can hang on Windows after a file change. If `/api` looks stale, `.\stop.ps1` then start again.
 

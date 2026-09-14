@@ -1,0 +1,36 @@
+services:
+  api:
+    build:
+      context: ./backend
+    environment:
+      LEDGER_DB_PATH: /data/app.db
+      LEDGER_SECURE_COOKIES: ${LEDGER_SECURE_COOKIES:-0}
+    volumes:
+      - ledger-data:/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        API_PROXY: http://api:8000
+    environment:
+      API_PROXY: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  proxy:
+    image: caddy:2-alpine
+    ports:
+      - "${LEDGER_PORT:-3000}:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+      - web
+    restart: unless-stopped
+
+volumes:
+  ledger-data:

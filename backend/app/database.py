@@ -1,9 +1,12 @@
+import os
 from pathlib import Path
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-DB_PATH = Path(__file__).resolve().parent.parent / "app.db"
+_default_db = Path(__file__).resolve().parent.parent / "app.db"
+DB_PATH = Path(os.environ.get("LEDGER_DB_PATH", _default_db))
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(

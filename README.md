@@ -22,6 +22,29 @@ Stop only this project's API, Next.js, and launcher windows:
 
 Or start each side alone: `.\start-backend.ps1`, `.\start-frontend.ps1`.
 
+### Docker
+
+```bash
+docker compose up -d --build
+docker compose exec api python set_password.py
+```
+
+App: http://localhost:3000 (Caddy on the host port, default 3000). SQLite lives in the `ledger-data` volume.
+
+```bash
+docker compose exec api python set_password.py --username alex
+docker compose down
+```
+
+On a VPS, publish port 80 and turn on secure cookies (put TLS on Caddy or another proxy):
+
+```bash
+LEDGER_PORT=80 LEDGER_SECURE_COOKIES=1 docker compose up -d --build
+docker compose exec api python set_password.py
+```
+
+Copy `.env.example` to `.env` to pin `LEDGER_PORT` and cookie settings. Do not bake a password into the image.
+
 ### Login (required)
 
 One local username. A script generates a long random password and stores **only a bcrypt hash** in SQLite. The plaintext is printed once.
