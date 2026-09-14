@@ -22,28 +22,105 @@ Stop only this project's API, Next.js, and launcher windows:
 
 Or start each side alone: `.\start-backend.ps1`, `.\start-frontend.ps1`.
 
-### Docker
+### Docker (local, builds on the machine)
 
 ```bash
 docker compose up -d --build
 docker compose exec api python set_password.py
 ```
 
-App: http://localhost:3000 (Caddy on the host port, default 3000). SQLite lives in the `ledger-data` volume.
+App: http://localhost:3000 (Caddy on the host port, default 3000). SQLite lives in the `ledger-data` volume. Do not bake a password into the image.
 
 ```bash
 docker compose exec api python set_password.py --username alex
 docker compose down
 ```
 
-On a VPS, publish port 80 and turn on secure cookies (put TLS on Caddy or another proxy):
+### VPS (build on your PC, copy images)
 
-```bash
-LEDGER_PORT=80 LEDGER_SECURE_COOKIES=1 docker compose up -d --build
-docker compose exec api python set_password.py
+Oracle Cloud and similar hosts often cannot build comfortably. Build and export on a machine with Docker, then load on the VPS. Use `-p ledger` so the image names stay `ledger-api` and `ledger-web`.
+
+**1. On your PC** (repo root; stop the local app first with `.\stop.ps1` if you will also copy `backend/app.db`):
+
+```powershell
+docker compose -p ledger build
+docker save ledger-api ledger-web -o ledger-images.tar
+scp -i YOUR_SSH_KEY .\ledger-images.tar ubuntu@YOUR_HOST:~/ledger-m1/
+scp -i YOUR_SSH_KEY .\backend\app.db ubuntu@YOUR_HOST:~/ledger-m1/app.db
 ```
 
-Copy `.env.example` to `.env` to pin `LEDGER_PORT` and cookie settings. Do not bake a password into the image.
+Create `~/ledger-m1` on the VPS first (`mkdir -p ~/ledger-m1`) or `scp` fails.
+
+**2. On the VPS**, load the images:
+
+```bash
+cd ~/ledger-m1
+docker load -i ledger-images.tar
+```
+
+**3. Write `~/ledger-m1/docker-compose.yml`** (this uses the loaded images; no build, no Caddyfile):
+
+```yaml
+services:
+  api:
+    image: ledger-api
+    environment:
+      LEDGER_DB_PATH: /data/app.db
+    volumes:
+      - ledger-data:/data
+    restart: unless-stopped
+
+  web:
+    image: ledger-web
+    ports:
+      - "80:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ledger-data:
+```
+
+**4. Start, then put the database into the volume** (not into the git folder):
+
+```bash
+cd ~/ledger-m1
+docker compose -p ledger up -d
+docker compose -p ledger stop api
+docker compose -p ledger cp ./app.db api:/data/app.db
+docker compose -p ledger exec -u root api chown ledger:ledger /data/app.db
+docker compose -p ledger exec -u root api chmod 664 /data/app.db
+docker compose -p ledger start api
+```
+
+If you skip `chown`, login fails: the API can read the file but cannot write a session (`attempt to write a readonly database`).
+
+**5. Open port 80 in two places** (Oracle Compute). The app can be healthy on the VM and still time out from the internet.
+
+On the VM:
+
+```bash
+sudo iptables -I INPUT 5 -p tcp -m state --state NEW --dport 80 -j ACCEPT
+sudo sh -c 'iptables-save > /etc/iptables/rules.v4'
+```
+
+In the Oracle console: **Compute → Instances → your instance → Subnet → Security Lists → Default Security List → Add Ingress Rules**. Source CIDR `0.0.0.0/0`, TCP, destination port `80`. If the instance uses a Network security group, add the same ingress rule there.
+
+Leave `LEDGER_SECURE_COOKIES` unset (or `0`) while the site is plain HTTP. Set it to `1` only after HTTPS is in front.
+
+**6. Sign in.** Use the same username and password as on your PC. If that password is lost, rotate on the VPS (prints once):
+
+```bash
+docker compose -p ledger exec api python set_password.py
+```
+
+Default username is `ledger`. Running it again signs everyone out.
+
+You can also move data later from **Setup → Download data / Upload database** (upload asks you to confirm overwrite; the VPS login is kept).
+
+App: `http://YOUR_HOST`. Check `docker compose -p ledger ps` and `docker logs ledger-api-1` if something fails.
 
 ### Login (required)
 
