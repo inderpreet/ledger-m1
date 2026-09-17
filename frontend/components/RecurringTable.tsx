@@ -22,7 +22,7 @@ const EMPTY: Record<string, string | number | boolean | null> = {
   term: "monthly",
 };
 
-export function RecurringTable() {
+export function RecurringTable({ onChanged }: { onChanged?: () => void }) {
   const [rows, setRows] = useState<RecurringItem[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
@@ -141,7 +141,7 @@ export function RecurringTable() {
         <section key={group.key} className="mb-8">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <h3 className="font-serif text-lg tracking-tight">{group.name}</h3>
-            <BudgetCompareLine income={group.income} spent={group.spent} budgeted={group.budgeted} />
+            <BudgetCompareLine income={group.income} spent={group.spent} />
           </div>
           {group.items.length > 0 ? (
             <DataTable
@@ -153,10 +153,12 @@ export function RecurringTable() {
               onUpdate={async (id, patch) => {
                 await api.put(`/api/recurring-items/${id}`, payloadFrom({ ...patch }));
                 await load();
+                onChanged?.();
               }}
               onDelete={async (id) => {
                 await api.delete(`/api/recurring-items/${id}`);
                 await load();
+                onChanged?.();
               }}
             />
           ) : (
@@ -178,6 +180,7 @@ export function RecurringTable() {
             await api.post("/api/recurring-items", payloadFrom(draft));
             setDraft({ ...EMPTY, target_account_id: draft.target_account_id });
             await load();
+            onChanged?.();
           }}
           onUpdate={async () => undefined}
           onDelete={async () => undefined}
@@ -187,15 +190,7 @@ export function RecurringTable() {
   );
 }
 
-function BudgetCompareLine({
-  income,
-  spent,
-  budgeted,
-}: {
-  income: number;
-  spent: number;
-  budgeted: number | null;
-}) {
+function BudgetCompareLine({ income, spent }: { income: number; spent: number }) {
   const incomeOnly = income > 0.005 && spent < 0.005;
   const mixed =
     income > 0.005 && spent > 0.005
@@ -203,25 +198,5 @@ function BudgetCompareLine({
       : incomeOnly
         ? `Recurring income ${formatMoney(income)} / mo`
         : `Recurring ${formatMoney(spent)} / mo`;
-
-  if (budgeted == null) {
-    return <span className="text-sm text-ink/55">{mixed} · no budget</span>;
-  }
-
-  const compare = incomeOnly ? income : spent;
-  const delta = budgeted - compare;
-  const over = delta < -0.005;
-  const under = delta > 0.005;
-  const good = incomeOnly ? over : under;
-  const tone = !over && !under ? "text-ink/55" : good ? "text-moss" : "text-clay";
-  const deltaLabel = over
-    ? `${formatMoney(Math.abs(delta))} over`
-    : under
-      ? `${formatMoney(delta)} under`
-      : "on budget";
-  return (
-    <span className={`text-sm tabular ${tone}`}>
-      {mixed} vs {formatMoney(budgeted)} budget · {deltaLabel}
-    </span>
-  );
+  return <span className="text-sm tabular text-ink/55">{mixed}</span>;
 }

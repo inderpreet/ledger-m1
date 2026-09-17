@@ -26,6 +26,22 @@ export function monthlyBudgetAmount(category: BudgetCategory | null | undefined)
   return category.amount;
 }
 
+export function monthlyToPeriod(monthly: number, period: BudgetCategory["period"]): number {
+  if (period === "yearly") return monthly * 12;
+  if (period === "biweekly") return (monthly * 12) / 26;
+  return monthly;
+}
+
+export function calculatedBudgetFromItems(
+  items: RecurringItem[],
+  category: BudgetCategory,
+): number {
+  const spent = sumMonthly(items, monthlyRecurringExpense);
+  const income = sumMonthly(items, monthlyRecurringIncome);
+  const monthly = spent > 0.005 ? spent : income;
+  return monthlyToPeriod(monthly, category.period);
+}
+
 function sumMonthly(
   items: RecurringItem[],
   pick: (item: RecurringItem) => number | null,
