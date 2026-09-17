@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { AccountName } from "@/components/AccountName";
 import { DataTable, type Column } from "@/components/DataTable";
 import { api } from "@/lib/api";
+import { groupRecurringByCategory } from "@/lib/budgetCompare";
 import { formatBiweeklyWhen, formatMoney } from "@/lib/format";
 import type { Account, RecurringItem } from "@/lib/types";
+import { categorySelectOptions, type BudgetCategory } from "@/lib/categories";
 
 const EMPTY: Record<string, string | number | boolean | null> = {
   description: "",
@@ -23,16 +25,19 @@ const EMPTY: Record<string, string | number | boolean | null> = {
 export function RecurringTable() {
   const [rows, setRows] = useState<RecurringItem[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [categories, setCategories] = useState<BudgetCategory[]>([]);
   const [draft, setDraft] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const [items, accts] = await Promise.all([
+    const [items, accts, cats] = await Promise.all([
       api.get<RecurringItem[]>("/api/recurring-items"),
       api.get<Account[]>("/api/accounts"),
+      api.get<BudgetCategory[]>("/api/budget-categories"),
     ]);
     setRows(items);
     setAccounts(accts);
+    setCategories(cats);
     if (!draft.target_account_id && accts[0]) {
       setDraft((prev) => ({ ...prev, target_account_id: String(accts[0].id) }));
     }
@@ -45,6 +50,7 @@ export function RecurringTable() {
 
   const accountOptions = accounts.map((a) => ({ value: String(a.id), label: a.name }));
   const byId = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a.name])), [accounts]);
+  const groups = useMemo(() => groupRecurringByCategory(rows, categories), [rows, categories]);
 
   const columns: Column<RecurringItem>[] = [
     { key: "description", label: "Description" },
@@ -96,7 +102,7 @@ export function RecurringTable() {
         <AccountName name={String(byId[row.target_account_id] ?? row.target_account_id)} />
       ),
     },
-    { key: "category", label: "Category" },
+    { key: "category", label: "Category", type: "select", options: categorySelectOptions(categories, rows.map((r) => r.category)) },
     {
       key: "active",
       label: "Active",
@@ -131,26 +137,91 @@ export function RecurringTable() {
           {error}
         </p>
       ) : null}
-      <DataTable
-        rows={rows}
-        columns={columns}
-        draft={draft}
-        onDraftChange={setDraft}
-        createLabel="Add recurring"
-        onCreate={async () => {
-          await api.post("/api/recurring-items", payloadFrom(draft));
-          setDraft({ ...EMPTY, target_account_id: draft.target_account_id });
-          await load();
-        }}
-        onUpdate={async (id, patch) => {
-          await api.put(`/api/recurring-items/${id}`, payloadFrom({ ...patch }));
-          await load();
-        }}
-        onDelete={async (id) => {
-          await api.delete(`/api/recurring-items/${id}`);
-          await load();
-        }}
-      />
+      {groups.map((group) => (
+        <section key={group.key} className="mb-8">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <h3 className="font-serif text-lg tracking-tight">{group.name}</h3>
+            <BudgetCompareLine income={group.income} spent={group.spent} budgeted={group.budgeted} />
+          </div>
+          {group.items.length > 0 ? (
+            <DataTable
+              rows={group.items}
+              columns={columns}
+              draft={draft}
+              onDraftChange={setDraft}
+              showCreate={false}
+              onUpdate={async (id, patch) => {
+                await api.put(`/api/recurring-items/${id}`, payloadFrom({ ...patch }));
+                await load();
+              }}
+              onDelete={async (id) => {
+                await api.delete(`/api/recurring-items/${id}`);
+                await load();
+              }}
+            />
+          ) : (
+            <p className="rounded-lg border border-rule bg-card px-3 py-2 text-sm text-ink/50">
+              No recurring items in this category yet.
+            </p>
+          )}
+        </section>
+      ))}
+      <section>
+        <h3 className="mb-3 font-serif text-lg tracking-tight">Add recurring</h3>
+        <DataTable
+          rows={[]}
+          columns={columns}
+          draft={draft}
+          onDraftChange={setDraft}
+          createLabel="Add recurring"
+          onCreate={async () => {
+            await api.post("/api/recurring-items", payloadFrom(draft));
+            setDraft({ ...EMPTY, target_account_id: draft.target_account_id });
+            await load();
+          }}
+          onUpdate={async () => undefined}
+          onDelete={async () => undefined}
+        />
+      </section>
     </div>
+  );
+}
+
+function BudgetCompareLine({
+  income,
+  spent,
+  budgeted,
+}: {
+  income: number;
+  spent: number;
+  budgeted: number | null;
+}) {
+  const incomeOnly = income > 0.005 && spent < 0.005;
+  const mixed =
+    income > 0.005 && spent > 0.005
+      ? `Income ${formatMoney(income)} / mo · expenses ${formatMoney(spent)} / mo`
+      : incomeOnly
+        ? `Recurring income ${formatMoney(income)} / mo`
+        : `Recurring ${formatMoney(spent)} / mo`;
+
+  if (budgeted == null) {
+    return <span className="text-sm text-ink/55">{mixed} · no budget</span>;
+  }
+
+  const compare = incomeOnly ? income : spent;
+  const delta = budgeted - compare;
+  const over = delta < -0.005;
+  const under = delta > 0.005;
+  const good = incomeOnly ? over : under;
+  const tone = !over && !under ? "text-ink/55" : good ? "text-moss" : "text-clay";
+  const deltaLabel = over
+    ? `${formatMoney(Math.abs(delta))} over`
+    : under
+      ? `${formatMoney(delta)} under`
+      : "on budget";
+  return (
+    <span className={`text-sm tabular ${tone}`}>
+      {mixed} vs {formatMoney(budgeted)} budget · {deltaLabel}
+    </span>
   );
 }

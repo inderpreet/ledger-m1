@@ -17,10 +17,11 @@ type Props<T extends { id: number }> = {
   columns: Column<T>[];
   draft: Record<string, string | number | boolean | null>;
   onDraftChange: (next: Record<string, string | number | boolean | null>) => void;
-  onCreate: () => Promise<void> | void;
+  onCreate?: () => Promise<void> | void;
   onUpdate: (id: number, patch: Record<string, unknown>) => Promise<void> | void;
   onDelete: (id: number) => Promise<void> | void;
   createLabel?: string;
+  showCreate?: boolean;
 };
 
 function isEditable<T>(col: Column<T>, values: Record<string, unknown>): boolean {
@@ -44,6 +45,7 @@ export function DataTable<T extends { id: number }>({
   onUpdate,
   onDelete,
   createLabel = "Add row",
+  showCreate = true,
 }: Props<T>) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [edit, setEdit] = useState<Record<string, string>>({});
@@ -89,6 +91,7 @@ export function DataTable<T extends { id: number }>({
   }
 
   async function create() {
+    if (!onCreate) return;
     setBusy(true);
     setError(null);
     try {
@@ -191,6 +194,7 @@ export function DataTable<T extends { id: number }>({
                 </tr>
               );
             })}
+            {showCreate ? (
             <tr className="bg-[#f6f1e6]">
               {columns.map((col) => (
                 <td key={col.key} className="px-3 py-2">
@@ -227,6 +231,7 @@ export function DataTable<T extends { id: number }>({
                 </button>
               </td>
             </tr>
+            ) : null}
           </tbody>
         </table>
       </div>

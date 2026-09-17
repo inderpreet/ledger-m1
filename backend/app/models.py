@@ -117,6 +117,19 @@ class Setting(Base):
     value: Mapped[str] = mapped_column(String, nullable=False)
 
 
+class BudgetCategory(Base):
+    __tablename__ = "budget_categories"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    amount: Mapped[float | None] = mapped_column(Float, nullable=True)
+    period: Mapped[str] = mapped_column(String, nullable=False, default="monthly")
+
+    __table_args__ = (
+        CheckConstraint("period IN ('monthly','biweekly','yearly')", name="ck_budget_period"),
+    )
+
+
 class AuthUser(Base):
     __tablename__ = "auth_users"
 

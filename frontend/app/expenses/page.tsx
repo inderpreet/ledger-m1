@@ -1,31 +1,38 @@
 "use client";
 
-import { OneOffTable } from "@/components/OneOffTable";
+import { useState } from "react";
+import { BudgetTable } from "@/components/BudgetTable";
+import { ExpensesSubnav } from "@/components/ExpensesSubnav";
 import { PageHeader } from "@/components/PageHeader";
 import { RecurringTable } from "@/components/RecurringTable";
 
 export default function ExpensesPage() {
+  const [budgetEpoch, setBudgetEpoch] = useState(0);
+
   return (
     <div>
       <PageHeader
         title="Expenses"
-        subtitle="Recurring items fire monthly or every two weeks. One-off items post on an exact date."
+        subtitle="Budget categories and recurring items grouped against those budgets."
       />
-      <section className="mb-10">
+      <ExpensesSubnav />
+      <section className="mb-10 rounded-lg border border-rule border-l-4 border-l-moss bg-card p-5">
+        <p className="mb-1 text-[11px] uppercase tracking-[0.16em] text-moss">Catalog</p>
+        <h2 className="mb-2 font-serif text-xl tracking-tight">Budgets</h2>
+        <p className="mb-4 text-sm text-ink/55">
+          Add categories such as Utilities, Insurance, or Mortgage, then set a monthly, bi-weekly,
+          or yearly amount. Recurring expenses below are grouped against these. Renaming updates
+          matching rows; deleting clears the category on those rows.
+        </p>
+        <BudgetTable onChanged={() => setBudgetEpoch((n) => n + 1)} />
+      </section>
+      <section className="border-t border-rule pt-10">
         <h2 className="mb-3 font-serif text-xl tracking-tight">Recurring</h2>
         <p className="mb-4 text-sm text-ink/55">
-          Monthly items use the day of month. Bi-weekly items use Start, then every two weeks after
-          that.
+          Grouped by budget category. Monthly totals count active income and expenses. Bi-weekly
+          amounts (items and budgets) use 26 pays / 12 months; yearly budgets are divided by 12.
         </p>
-        <RecurringTable />
-      </section>
-      <section>
-        <h2 className="mb-3 font-serif text-xl tracking-tight">One-off</h2>
-        <p className="mb-4 text-sm text-ink/55">
-          Exact-date income and expenses. Card-targeted rows wait until the statement due date to
-          hit a bank account.
-        </p>
-        <OneOffTable />
+        <RecurringTable key={budgetEpoch} />
       </section>
     </div>
   );

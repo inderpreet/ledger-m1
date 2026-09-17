@@ -34,7 +34,7 @@ Uvicorn `--reload` can hang on Windows after a file change. If `/api` looks stal
 | `frontend/app/` | Pages |
 | `frontend/components/` | UI |
 
-Nav: Dashboard `/`, Bank Account Flow `/bank-flow`, Credit Cards `/credit-cards`, Expenses `/expenses`, Setup `/setup`. Old URLs redirect.
+Nav: Dashboard `/`, Expenses `/expenses`, Expenses Actual `/expenses/actual`, Bank Account `/bank-flow`, Credit Card `/credit-cards`, Statements `/credit-cards/statements`, Setup `/setup`. Old URLs redirect.
 
 ## UI
 

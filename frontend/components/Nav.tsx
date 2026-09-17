@@ -3,13 +3,31 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-const LINKS = [
+const LINKS: {
+  href: string;
+  label: string;
+  children?: { href: string; label: string }[];
+}[] = [
   { href: "/", label: "Dashboard" },
-  { href: "/bank-flow", label: "Bank Account Flow" },
-  { href: "/credit-cards", label: "Credit Cards" },
-  { href: "/expenses", label: "Expenses" },
+  {
+    href: "/expenses",
+    label: "Expenses",
+    children: [{ href: "/expenses/actual", label: "Actual" }],
+  },
+  { href: "/bank-flow", label: "Bank Account" },
+  {
+    href: "/credit-cards",
+    label: "Credit Card",
+    children: [{ href: "/credit-cards/statements", label: "Statements" }],
+  },
   { href: "/setup", label: "Setup" },
 ];
+
+function linkClass(active: boolean, muted = false) {
+  if (active) return "bg-white/12 text-white";
+  if (muted) return "text-white/80 hover:bg-white/6 hover:text-white";
+  return "text-white/65 hover:bg-white/6 hover:text-white";
+}
 
 export function Nav() {
   const pathname = usePathname();
@@ -31,18 +49,25 @@ export function Nav() {
       <nav className="flex flex-1 flex-col gap-0.5 p-3">
         {LINKS.map((link) => {
           const active = pathname === link.href;
+          const childActive = link.children?.some((child) => pathname === child.href) ?? false;
           return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`rounded-md px-3 py-2 text-sm transition ${
-                active
-                  ? "bg-white/12 text-white"
-                  : "text-white/65 hover:bg-white/6 hover:text-white"
-              }`}
-            >
-              {link.label}
-            </Link>
+            <div key={link.href} className="flex flex-col gap-0.5">
+              <Link
+                href={link.href}
+                className={`rounded-md px-3 py-2 text-sm transition ${linkClass(active, childActive)}`}
+              >
+                {link.label}
+              </Link>
+              {link.children?.map((child) => (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  className={`ml-3 rounded-md px-3 py-1.5 text-sm transition ${linkClass(pathname === child.href)}`}
+                >
+                  {child.label}
+                </Link>
+              ))}
+            </div>
           );
         })}
       </nav>

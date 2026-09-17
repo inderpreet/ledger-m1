@@ -11,7 +11,7 @@ from app.schemas import (
     RecurringItemOut,
     RecurringItemUpdate,
 )
-from app.validation import validate_item_target
+from app.validation import validate_category, validate_item_target
 
 from app.security import current_user
 
@@ -26,7 +26,9 @@ def list_recurring(db: Session = Depends(get_db)):
 @router.post("/recurring-items", response_model=RecurringItemOut, status_code=201)
 def create_recurring(payload: RecurringItemCreate, db: Session = Depends(get_db)):
     validate_item_target(db, payload.item_type, payload.target_account_id)
-    item = RecurringItem(**payload.model_dump())
+    data = payload.model_dump()
+    data["category"] = validate_category(db, data.get("category"))
+    item = RecurringItem(**data)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -49,6 +51,8 @@ def update_recurring(item_id: int, payload: RecurringItemUpdate, db: Session = D
     if term == "biweekly" and not start:
         raise HTTPException(status_code=422, detail="bi-weekly items need a start_date (first payday)")
     validate_item_target(db, item_type, target_id)
+    if "category" in data:
+        data["category"] = validate_category(db, data.get("category"))
     for key, value in data.items():
         setattr(item, key, value)
     db.commit()
@@ -73,7 +77,9 @@ def list_one_off(db: Session = Depends(get_db)):
 @router.post("/one-off-items", response_model=OneOffItemOut, status_code=201)
 def create_one_off(payload: OneOffItemCreate, db: Session = Depends(get_db)):
     validate_item_target(db, payload.item_type, payload.target_account_id)
-    item = OneOffItem(**payload.model_dump())
+    data = payload.model_dump()
+    data["category"] = validate_category(db, data.get("category"))
+    item = OneOffItem(**data)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -89,6 +95,8 @@ def update_one_off(item_id: int, payload: OneOffItemUpdate, db: Session = Depend
     item_type = data.get("item_type", item.item_type)
     target_id = data.get("target_account_id", item.target_account_id)
     validate_item_target(db, item_type, target_id)
+    if "category" in data:
+        data["category"] = validate_category(db, data.get("category"))
     for key, value in data.items():
         setattr(item, key, value)
     db.commit()

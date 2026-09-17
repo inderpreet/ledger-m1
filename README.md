@@ -158,13 +158,15 @@ cd backend
 | Nav | Route | What it shows |
 |---|---|---|
 | Dashboard | `/` | Bank balances, low-balance banner, bank-flow chart, expenses by category |
-| Bank Account Flow | `/bank-flow` | Daily bank balances and activity |
-| Credit Cards | `/credit-cards` | Card-targeted charges and due-date payments |
-| Expenses | `/expenses` | Recurring and one-off items |
-| Setup | `/setup` | Opening balances, model start/end, card funding, statement cycles |
+| Expenses | `/expenses` | Budgets and recurring items vs budget |
+| Expenses Actual | `/expenses/actual` | One-off income and expenses |
+| Bank Account | `/bank-flow` | Daily bank balances and activity |
+| Credit Card | `/credit-cards` | Credit Card Model: card-targeted charges and due-date payments |
+| Statements | `/credit-cards/statements` | Card funding and statement cycles |
+| Setup | `/setup` | Opening balances, model start/end, and database backup |
 | — | `/login` | Single-user sign-in |
 
-Old routes redirect: `/cashflow` → `/bank-flow`, `/cc-cashflow` → `/credit-cards`, `/recurring` and `/one-off` → `/expenses`, `/settings` → `/setup`.
+Old routes redirect: `/cashflow` → `/bank-flow`, `/cc-cashflow` → `/credit-cards`, `/recurring` and `/budgets` → `/expenses`, `/one-off` → `/expenses/actual`, `/settings` → `/setup`.
 
 Scotia is shown in red, TD GK in green.
 
@@ -191,7 +193,7 @@ stop.ps1           Kill this project's processes
 
 ## API (`/api/`)
 
-CRUD: `accounts`, `recurring-items`, `one-off-items`, `settings`.
+CRUD: `accounts`, `budget-categories`, `recurring-items`, `one-off-items`, `settings`.
 
 Cards and cycles:
 
@@ -229,7 +231,7 @@ Pure functions, no FastAPI/SQLAlchemy imports. Unit tests in `backend/tests/test
 
 ## Seed
 
-On first empty database, `backend/app/seed.py` loads accounts, funding, recurring/one-off rows, Scotia CC and TD CC cycle anchors (then generates through `model_end_date`), and settings (`low_balance_threshold` 6000, `model_start_date` today at first run, `model_end_date` 2026-12-31). Change the projection window in Setup; it is stored and does not jump to today on each visit.
+On first empty database, `backend/app/seed.py` loads accounts, funding, budget categories, recurring/one-off rows, Scotia CC and TD CC cycle anchors (then generates through `model_end_date`), and settings (`low_balance_threshold` 6000, `model_start_date` today at first run, `model_end_date` 2026-12-31). Change the projection window in Setup; it is stored and does not jump to today on each visit.
 
 - Opening balances start unset — enter them in Setup.
 - Rent Mol, Enercare, and Gas are incomplete (`amount` / `day_of_month` null).

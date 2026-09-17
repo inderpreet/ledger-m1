@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { AccountName } from "@/components/AccountName";
-import { CreditCardSetup } from "@/components/CreditCardSetup";
 import { DatabaseBackup } from "@/components/DatabaseBackup";
 import { PageHeader } from "@/components/PageHeader";
 import { api } from "@/lib/api";
@@ -18,7 +17,6 @@ export default function SetupPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [dataEpoch, setDataEpoch] = useState(0);
 
   async function load() {
     const [s, accounts] = await Promise.all([
@@ -70,7 +68,7 @@ export default function SetupPage() {
     <div>
       <PageHeader
         title="Setup"
-        subtitle="Opening balances, projection window, and credit-card statement cycles."
+        subtitle="Opening balances, projection window, and database backup."
       />
       {error ? (
         <p className="mb-4 rounded-md border border-clay/30 bg-[#f8ebe6] px-3 py-2 text-sm text-clay">
@@ -158,20 +156,7 @@ export default function SetupPage() {
         )}
       </section>
 
-      <DatabaseBackup
-        onImported={async () => {
-          await load();
-          setDataEpoch((n) => n + 1);
-        }}
-      />
-
-      <section>
-        <h2 className="mb-3 font-serif text-xl tracking-tight">Credit cards</h2>
-        <p className="mb-4 text-sm text-ink/55">
-          Charges stay on the card until the funding account is debited on payment due.
-        </p>
-        <CreditCardSetup key={dataEpoch} />
-      </section>
+      <DatabaseBackup onImported={() => load()} />
     </div>
   );
 }

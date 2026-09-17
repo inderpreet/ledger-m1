@@ -12,10 +12,12 @@ export function CashflowView({
   title,
   subtitle,
   endpoint,
+  hideHeader = false,
 }: {
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   endpoint: string;
+  hideHeader?: boolean;
 }) {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -41,37 +43,39 @@ export function CashflowView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
+  const dateControls = (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <input
+        className="rounded-md border border-rule bg-card px-2 py-1"
+        type="date"
+        value={start}
+        onChange={(e) => setStart(e.target.value)}
+      />
+      <span className="text-ink/40">to</span>
+      <input
+        className="rounded-md border border-rule bg-card px-2 py-1"
+        type="date"
+        value={end}
+        onChange={(e) => setEnd(e.target.value)}
+      />
+      <button
+        className="rounded-md bg-moss px-3 py-1.5 text-xs font-medium text-white hover:bg-moss-deep"
+        onClick={() =>
+          load().catch((err) => setError(err instanceof Error ? err.message : "Failed"))
+        }
+      >
+        Apply
+      </button>
+    </div>
+  );
+
   return (
     <div>
-      <PageHeader
-        title={title}
-        subtitle={subtitle}
-        action={
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <input
-              className="rounded-md border border-rule bg-card px-2 py-1"
-              type="date"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-            />
-            <span className="text-ink/40">to</span>
-            <input
-              className="rounded-md border border-rule bg-card px-2 py-1"
-              type="date"
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
-            />
-            <button
-              className="rounded-md bg-moss px-3 py-1.5 text-xs font-medium text-white hover:bg-moss-deep"
-              onClick={() =>
-                load().catch((err) => setError(err instanceof Error ? err.message : "Failed"))
-              }
-            >
-              Apply
-            </button>
-          </div>
-        }
-      />
+      {hideHeader ? (
+        <div className="mb-3 flex flex-wrap justify-end">{dateControls}</div>
+      ) : (
+        <PageHeader title={title ?? ""} subtitle={subtitle} action={dateControls} />
+      )}
       {error ? (
         <p className="mb-4 rounded-md border border-clay/30 bg-[#f8ebe6] px-3 py-2 text-sm text-clay">
           {error}

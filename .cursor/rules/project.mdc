@@ -8,7 +8,7 @@ alwaysApply: true
 Cash flow tracker. FastAPI + SQLite backend, Next.js frontend. Backend owns all balance math; frontend only renders API data.
 
 - Start: `.\start.ps1` (API :8000, app :3000) or `docker compose up -d --build`. Stop this project: `.\stop.ps1` or `docker compose down`.
-- Nav: `/` Dashboard, `/bank-flow`, `/credit-cards`, `/expenses`, `/setup`.
+- Nav: `/` Dashboard, `/expenses`, `/expenses/actual`, `/bank-flow`, `/credit-cards`, `/credit-cards/statements`, `/setup`.
 - Amounts stored positive. Direction from `item_type`.
 - Card charges do not hit a bank until `payment_due`. That payment also pays the card down by the statement total.
 - Do not cache computed balances in the database.

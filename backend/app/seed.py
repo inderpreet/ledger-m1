@@ -58,6 +58,15 @@ ONE_OFFS = [
     },
 ]
 
+BUDGET_CATEGORIES = [
+    "Income",
+    "Housing & Debt",
+    "Mortgage",
+    "Utilities",
+    "Insurance",
+    "Subscriptions",
+]
+
 CYCLE_ANCHORS = [
     {"account": "TD CC", "statement_from": "2026-08-05", "statement_to": "2026-09-03", "payment_due": "2026-09-24"},
     {"account": "Scotia CC", "statement_from": "2026-07-12", "statement_to": "2026-08-11", "payment_due": "2026-09-01"},
@@ -81,6 +90,10 @@ def seed(db: Session) -> None:
         db.add(account)
         db.flush()
         by_name[account.name] = account
+
+    for name in BUDGET_CATEGORIES:
+        if db.query(models.BudgetCategory).filter_by(name=name).first() is None:
+            db.add(models.BudgetCategory(name=name))
 
     for row in CC_FUNDING:
         db.add(

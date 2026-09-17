@@ -51,3 +51,67 @@ def ensure_schema() -> None:
                     text("INSERT INTO settings (key, value) VALUES ('model_start_date', :v)"),
                     {"v": date.today().isoformat()},
                 )
+        cats_tbl = conn.execute(
+            text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='budget_categories'")
+        ).fetchone()
+        if cats_tbl:
+            count = conn.execute(text("SELECT COUNT(*) FROM budget_categories")).scalar()
+            if not count:
+                names = {
+                    str(row[0]).strip()
+                    for row in conn.execute(
+                        text(
+                            "SELECT DISTINCT category FROM recurring_items "
+                            "WHERE category IS NOT NULL AND TRIM(category) != '' "
+                            "UNION "
+                            "SELECT DISTINCT category FROM one_off_items "
+                            "WHERE category IS NOT NULL AND TRIM(category) != ''"
+                        )
+                    ).fetchall()
+                    if row[0]
+                }
+                for name in sorted(names):
+                    conn.execute(
+                        text("INSERT INTO budget_categories (name) VALUES (:name)"),
+                        {"name": name},
+                    )
+            cat_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(budget_categories)"))]
+            if cat_cols and "amount" not in cat_cols:
+                conn.execute(text("ALTER TABLE budget_categories ADD COLUMN amount REAL"))
+            if cat_cols and "period" not in cat_cols:
+                conn.execute(
+                    text(
+                        "ALTER TABLE budget_categories ADD COLUMN period TEXT NOT NULL DEFAULT 'monthly'"
+                    )
+                )
+            ddl = conn.execute(
+                text(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='budget_categories'"
+                )
+            ).fetchone()
+            ddl_sql = ddl[0] if ddl and ddl[0] else ""
+            if "biweekly" not in ddl_sql and (
+                "ck_budget_period" in ddl_sql or "'yearly'" in ddl_sql
+            ):
+                conn.execute(
+                    text(
+                        """
+                        CREATE TABLE budget_categories_new (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name TEXT NOT NULL UNIQUE,
+                            amount REAL,
+                            period TEXT NOT NULL DEFAULT 'monthly',
+                            CHECK (period IN ('monthly','biweekly','yearly'))
+                        )
+                        """
+                    )
+                )
+                conn.execute(
+                    text(
+                        "INSERT INTO budget_categories_new (id, name, amount, period) "
+                        "SELECT id, name, amount, COALESCE(period, 'monthly') "
+                        "FROM budget_categories"
+                    )
+                )
+                conn.execute(text("DROP TABLE budget_categories"))
+                conn.execute(text("ALTER TABLE budget_categories_new RENAME TO budget_categories"))

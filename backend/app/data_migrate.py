@@ -16,6 +16,7 @@ DATA_TABLES = (
     "accounts",
     "credit_card_config",
     "statement_cycles",
+    "budget_categories",
     "recurring_items",
     "one_off_items",
     "settings",
@@ -25,6 +26,7 @@ DELETE_ORDER = (
     "credit_card_config",
     "recurring_items",
     "one_off_items",
+    "budget_categories",
     "settings",
     "accounts",
 )
@@ -32,6 +34,7 @@ INSERT_ORDER = (
     "accounts",
     "credit_card_config",
     "statement_cycles",
+    "budget_categories",
     "recurring_items",
     "one_off_items",
     "settings",
@@ -40,6 +43,7 @@ COLUMN_DEFAULTS: dict[tuple[str, str], str] = {
     ("recurring_items", "term"): "'monthly'",
     ("recurring_items", "active"): "1",
     ("statement_cycles", "is_generated"): "1",
+    ("budget_categories", "period"): "'monthly'",
 }
 
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -106,7 +110,7 @@ def _copy_table(conn: sqlite3.Connection, table: str, source_tables: set[str]) -
 
 
 def _sync_sequences(conn: sqlite3.Connection, source_tables: set[str]) -> None:
-    id_tables = ("accounts", "statement_cycles", "recurring_items", "one_off_items")
+    id_tables = ("accounts", "statement_cycles", "recurring_items", "one_off_items", "budget_categories")
     has_seq = conn.execute(
         "SELECT 1 FROM main.sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'"
     ).fetchone()

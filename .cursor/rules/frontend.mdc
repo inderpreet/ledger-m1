@@ -7,6 +7,6 @@ alwaysApply: false
 # Frontend
 
 - Fetch `/api/*` (Next rewrites to FastAPI). No client-side running balances.
-- Shared table: `CashflowView` for bank and cards. Expenses: `RecurringTable` + `OneOffTable`. Setup: balances, model start/end, `CreditCardSetup`.
+- Shared table: `CashflowView` for bank and cards. Credit Cards (`/credit-cards`): `CashflowView` (Credit Card Model). Statements (`/credit-cards/statements`): `CreditCardSetup`. Expenses: `BudgetTable` + `RecurringTable`. Expenses Actual (`/expenses/actual`): `OneOffTable`. Setup: balances, model start/end, database backup.
 - Account colors: `lib/accountStyle.ts` — Scotia `#c42b2b`, TD `#187a3c`.
-- Keep redirects for `/cashflow`, `/cc-cashflow`, `/recurring`, `/one-off`, `/settings`.
+- Keep redirects for `/cashflow`, `/cc-cashflow`, `/recurring`, `/one-off`, `/settings`, `/budgets`.

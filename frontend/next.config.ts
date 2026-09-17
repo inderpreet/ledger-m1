@@ -9,8 +9,9 @@ const nextConfig: NextConfig = {
       { source: "/cashflow", destination: "/bank-flow", permanent: false },
       { source: "/cc-cashflow", destination: "/credit-cards", permanent: false },
       { source: "/recurring", destination: "/expenses", permanent: false },
-      { source: "/one-off", destination: "/expenses", permanent: false },
+      { source: "/one-off", destination: "/expenses/actual", permanent: false },
       { source: "/settings", destination: "/setup", permanent: false },
+      { source: "/budgets", destination: "/expenses", permanent: false },
     ];
   },
   async rewrites() {

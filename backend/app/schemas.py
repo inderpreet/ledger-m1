@@ -9,6 +9,17 @@ def normalize_term(value: str | None) -> str:
     raise ValueError("term must be 'monthly' or 'biweekly'")
 
 
+def normalize_budget_period(value: str) -> str:
+    raw = str(value or "monthly").lower().replace("-", "").replace(" ", "")
+    if raw in {"year", "annual", "annually", "yearly"}:
+        return "yearly"
+    if raw == "biweekly":
+        return "biweekly"
+    if raw == "monthly":
+        return "monthly"
+    raise ValueError("period must be 'monthly', 'biweekly', or 'yearly'")
+
+
 class AccountCreate(BaseModel):
     name: str
     account_type: str
@@ -248,3 +259,50 @@ class AuthStatusOut(BaseModel):
 
 class AuthMeOut(BaseModel):
     username: str
+
+
+class BudgetCategoryCreate(BaseModel):
+    name: str
+    amount: float | None = None
+    period: str = "monthly"
+
+    @field_validator("amount")
+    @classmethod
+    def amount_positive(cls, v: float | None) -> float | None:
+        if v is not None and v <= 0:
+            raise ValueError("amount must be greater than 0")
+        return v
+
+    @field_validator("period")
+    @classmethod
+    def period_ok(cls, v: str) -> str:
+        return normalize_budget_period(v)
+
+
+class BudgetCategoryUpdate(BaseModel):
+    name: str | None = None
+    amount: float | None = None
+    period: str | None = None
+
+    @field_validator("amount")
+    @classmethod
+    def amount_positive(cls, v: float | None) -> float | None:
+        if v is not None and v <= 0:
+            raise ValueError("amount must be greater than 0")
+        return v
+
+    @field_validator("period")
+    @classmethod
+    def period_ok(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return normalize_budget_period(v)
+
+
+class BudgetCategoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    amount: float | None
+    period: str

@@ -6,6 +6,7 @@ import { DataTable, type Column } from "@/components/DataTable";
 import { api } from "@/lib/api";
 import { formatMoney, isoToday } from "@/lib/format";
 import type { Account, OneOffItem } from "@/lib/types";
+import { categorySelectOptions, type BudgetCategory } from "@/lib/categories";
 
 const EMPTY: Record<string, string | number | boolean | null> = {
   description: "",
@@ -19,16 +20,19 @@ const EMPTY: Record<string, string | number | boolean | null> = {
 export function OneOffTable() {
   const [rows, setRows] = useState<OneOffItem[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [categories, setCategories] = useState<BudgetCategory[]>([]);
   const [draft, setDraft] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const [items, accts] = await Promise.all([
+    const [items, accts, cats] = await Promise.all([
       api.get<OneOffItem[]>("/api/one-off-items"),
       api.get<Account[]>("/api/accounts"),
+      api.get<BudgetCategory[]>("/api/budget-categories"),
     ]);
     setRows(items);
     setAccounts(accts);
+    setCategories(cats);
     if (!draft.target_account_id && accts[0]) {
       setDraft((prev) => ({ ...prev, target_account_id: String(accts[0].id) }));
     }
@@ -69,7 +73,7 @@ export function OneOffTable() {
         <AccountName name={String(byId[row.target_account_id] ?? row.target_account_id)} />
       ),
     },
-    { key: "category", label: "Category" },
+    { key: "category", label: "Category", type: "select", options: categorySelectOptions(categories, rows.map((r) => r.category)) },
   ];
 
   function payloadFrom(record: Record<string, unknown>) {
