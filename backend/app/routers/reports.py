@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -19,6 +19,13 @@ from app.security import current_user
 router = APIRouter(dependencies=[Depends(current_user)])
 
 
+def _parse_iso(value: str, field: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        raise HTTPException(status_code=422, detail=f"{field} must be YYYY-MM-DD") from None
+
+
 @router.get("/settings", response_model=SettingsOut)
 def read_settings(db: Session = Depends(get_db)):
     return get_settings(db)
@@ -28,8 +35,19 @@ def read_settings(db: Session = Depends(get_db)):
 def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)):
     if payload.low_balance_threshold is not None:
         upsert_setting(db, "low_balance_threshold", str(payload.low_balance_threshold))
+    if payload.model_start_date is not None:
+        _parse_iso(payload.model_start_date, "model_start_date")
+        upsert_setting(db, "model_start_date", payload.model_start_date)
     if payload.model_end_date is not None:
+        _parse_iso(payload.model_end_date, "model_end_date")
         upsert_setting(db, "model_end_date", payload.model_end_date)
+    db.flush()
+    settings = get_settings(db)
+    if date.fromisoformat(settings["model_start_date"]) > date.fromisoformat(settings["model_end_date"]):
+        raise HTTPException(
+            status_code=422,
+            detail="model_start_date must be on or before model_end_date",
+        )
     db.commit()
     return get_settings(db)
 

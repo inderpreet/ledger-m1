@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from pathlib import Path
 
 from sqlalchemy import create_engine, text
@@ -38,3 +39,15 @@ def ensure_schema() -> None:
             conn.execute(
                 text("ALTER TABLE recurring_items ADD COLUMN term TEXT NOT NULL DEFAULT 'monthly'")
             )
+        settings_tbl = conn.execute(
+            text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='settings'")
+        ).fetchone()
+        if settings_tbl:
+            has_start = conn.execute(
+                text("SELECT 1 FROM settings WHERE key='model_start_date'")
+            ).fetchone()
+            if not has_start:
+                conn.execute(
+                    text("INSERT INTO settings (key, value) VALUES ('model_start_date', :v)"),
+                    {"v": date.today().isoformat()},
+                )

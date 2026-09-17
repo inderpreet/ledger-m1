@@ -22,6 +22,7 @@ def get_setting(db: Session, key: str, default: str) -> str:
 def get_settings(db: Session) -> dict:
     return {
         "low_balance_threshold": float(get_setting(db, "low_balance_threshold", "6000")),
+        "model_start_date": get_setting(db, "model_start_date", date.today().isoformat()),
         "model_end_date": get_setting(db, "model_end_date", "2026-12-31"),
     }
 
@@ -68,7 +69,7 @@ def compute_statement_totals(db: Session) -> list[dict]:
 
 def compute_daily_cashflow(db: Session, start: date | None, end: date | None) -> dict:
     settings = get_settings(db)
-    start_date = start or date.today()
+    start_date = start or date.fromisoformat(settings["model_start_date"])
     end_date = end or date.fromisoformat(settings["model_end_date"])
     accounts = db.query(models.Account).all()
     bank_accounts = [a for a in accounts if a.account_type == "bank"]
@@ -119,7 +120,7 @@ def compute_daily_cashflow(db: Session, start: date | None, end: date | None) ->
 
 def compute_cc_cashflow(db: Session, start: date | None, end: date | None) -> dict:
     settings = get_settings(db)
-    start_date = start or date.today()
+    start_date = start or date.fromisoformat(settings["model_start_date"])
     end_date = end or date.fromisoformat(settings["model_end_date"])
     accounts = db.query(models.Account).all()
     cards = [a for a in accounts if a.account_type == "credit_card"]
@@ -169,9 +170,9 @@ def compute_cc_cashflow(db: Session, start: date | None, end: date | None) -> di
 def compute_dashboard(db: Session) -> dict:
     settings = get_settings(db)
     threshold = settings["low_balance_threshold"]
-    today = date.today()
+    start = date.fromisoformat(settings["model_start_date"])
     end = date.fromisoformat(settings["model_end_date"])
-    payload = compute_daily_cashflow(db, today, end)
+    payload = compute_daily_cashflow(db, start, end)
     accounts = {a.id: a for a in db.query(models.Account).filter(models.Account.account_type == "bank").all()}
     rows = payload["rows"]
 
@@ -211,8 +212,9 @@ def compute_dashboard(db: Session) -> dict:
     one_offs = db.query(models.OneOffItem).all()
 
     return {
-        "as_of": today.isoformat(),
+        "as_of": start.isoformat(),
         "threshold": threshold,
+        "model_start_date": settings["model_start_date"],
         "model_end_date": settings["model_end_date"],
         "opening_balances_set": not any_unset,
         "accounts": account_summaries,
@@ -220,5 +222,5 @@ def compute_dashboard(db: Session) -> dict:
             "current_balance": None if any_unset else round(combined_current, 2),
             "first_low_balance_date": combined_low.isoformat() if combined_low else None,
         },
-        "expenses_by_category": expenses_by_category(recurring, one_offs, today, end),
+        "expenses_by_category": expenses_by_category(recurring, one_offs, start, end),
     }

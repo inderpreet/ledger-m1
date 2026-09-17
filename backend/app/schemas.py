@@ -192,11 +192,13 @@ class OneOffItemOut(BaseModel):
 
 class SettingsOut(BaseModel):
     low_balance_threshold: float
+    model_start_date: str
     model_end_date: str
 
 
 class SettingsUpdate(BaseModel):
     low_balance_threshold: float | None = None
+    model_start_date: str | None = None
     model_end_date: str | None = None
 
 

@@ -37,6 +37,7 @@ export type OneOffItem = {
 
 export type Settings = {
   low_balance_threshold: number;
+  model_start_date: string;
   model_end_date: string;
 };
 
@@ -87,6 +88,7 @@ export type CashflowPayload = {
 export type DashboardPayload = {
   as_of: string;
   threshold: number;
+  model_start_date: string;
   model_end_date: string;
   opening_balances_set: boolean;
   accounts: {

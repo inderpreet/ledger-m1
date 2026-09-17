@@ -161,7 +161,7 @@ cd backend
 | Bank Account Flow | `/bank-flow` | Daily bank balances and activity |
 | Credit Cards | `/credit-cards` | Card-targeted charges and due-date payments |
 | Expenses | `/expenses` | Recurring and one-off items |
-| Setup | `/setup` | Opening balances, model window, card funding, statement cycles |
+| Setup | `/setup` | Opening balances, model start/end, card funding, statement cycles |
 | — | `/login` | Single-user sign-in |
 
 Old routes redirect: `/cashflow` → `/bank-flow`, `/cc-cashflow` → `/credit-cards`, `/recurring` and `/one-off` → `/expenses`, `/settings` → `/setup`.
@@ -203,7 +203,7 @@ Cards and cycles:
 Computed (read-only):
 
 - `GET /cc-statement-totals`
-- `GET /daily-cashflow?start=&end=`
+- `GET /daily-cashflow?start=&end=` — omitted dates use Setup `model_start_date` / `model_end_date`
 - `GET /cc-cashflow?start=&end=`
 - `GET /dashboard`
 - `GET /health` (public)
@@ -229,7 +229,7 @@ Pure functions, no FastAPI/SQLAlchemy imports. Unit tests in `backend/tests/test
 
 ## Seed
 
-On first empty database, `backend/app/seed.py` loads accounts, funding, recurring/one-off rows, Scotia CC and TD CC cycle anchors (then generates through `model_end_date`), and settings (`low_balance_threshold` 6000, `model_end_date` 2026-12-31).
+On first empty database, `backend/app/seed.py` loads accounts, funding, recurring/one-off rows, Scotia CC and TD CC cycle anchors (then generates through `model_end_date`), and settings (`low_balance_threshold` 6000, `model_start_date` today at first run, `model_end_date` 2026-12-31). Change the projection window in Setup; it is stored and does not jump to today on each visit.
 
 - Opening balances start unset — enter them in Setup.
 - Rent Mol, Enercare, and Gas are incomplete (`amount` / `day_of_month` null).

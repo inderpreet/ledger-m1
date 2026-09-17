@@ -12,6 +12,7 @@ export default function SetupPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [banks, setBanks] = useState<Account[]>([]);
   const [threshold, setThreshold] = useState("");
+  const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [balances, setBalances] = useState<Record<number, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export default function SetupPage() {
     setSettings(s);
     setBanks(bankAccounts);
     setThreshold(String(s.low_balance_threshold));
+    setStartDate(s.model_start_date);
     setEndDate(s.model_end_date);
     setBalances(
       Object.fromEntries(
@@ -47,6 +49,7 @@ export default function SetupPage() {
     try {
       await api.put("/api/settings", {
         low_balance_threshold: Number(threshold),
+        model_start_date: startDate,
         model_end_date: endDate,
       });
       for (const bank of banks) {
@@ -91,6 +94,17 @@ export default function SetupPage() {
                 className="w-full rounded-md border border-rule bg-white px-3 py-2 tabular"
                 value={threshold}
                 onChange={(e) => setThreshold(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-[11px] uppercase tracking-wider text-ink/45">
+                Model start date
+              </span>
+              <input
+                type="date"
+                className="w-full rounded-md border border-rule bg-white px-3 py-2"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
               />
             </label>
             <label className="block text-sm">

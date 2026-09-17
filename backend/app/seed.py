@@ -8,6 +8,7 @@ from app.engine import cycles_to_insert, generate_cycles, parse_date
 
 SEED_SETTINGS = {
     "low_balance_threshold": "6000",
+    "model_start_date": date.today().isoformat(),
     "model_end_date": "2026-12-31",
 }
 
@@ -155,7 +156,8 @@ def seed(db: Session) -> None:
             db.flush()
 
     for key, value in SEED_SETTINGS.items():
-        db.add(models.Setting(key=key, value=value))
+        if db.get(models.Setting, key) is None:
+            db.add(models.Setting(key=key, value=value))
 
     db.commit()
 

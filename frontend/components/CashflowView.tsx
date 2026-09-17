@@ -5,7 +5,7 @@ import { BalanceChart } from "@/components/BalanceChart";
 import { PageHeader } from "@/components/PageHeader";
 import { accountTextClass } from "@/lib/accountStyle";
 import { api } from "@/lib/api";
-import { formatDateWithDay, formatMoney, isoToday } from "@/lib/format";
+import { formatDateWithDay, formatMoney } from "@/lib/format";
 import type { CashflowMovement, CashflowPayload, Settings } from "@/lib/types";
 
 export function CashflowView({
@@ -17,8 +17,8 @@ export function CashflowView({
   subtitle: string;
   endpoint: string;
 }) {
-  const [start, setStart] = useState(isoToday());
-  const [end, setEnd] = useState("2026-12-31");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
   const [data, setData] = useState<CashflowPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,8 +33,9 @@ export function CashflowView({
     api
       .get<Settings>("/api/settings")
       .then((settings) => {
+        setStart(settings.model_start_date);
         setEnd(settings.model_end_date);
-        return load(isoToday(), settings.model_end_date);
+        return load(settings.model_start_date, settings.model_end_date);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
